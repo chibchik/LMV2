@@ -42,14 +42,12 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 button:disabled { cursor: default; }
 
 .page { max-width: 1060px; margin: 0 auto; padding-block: 24px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 20px; }
-.top h1 { font-family: var(--font-head); font-weight: 700; font-size: 24px; margin: 0; text-wrap: balance; }
-.top p { margin: 4px 0 0; color: var(--muted); }
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .tab { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-weight: 600; }
 .tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 .tab small { font-weight: 500; opacity: .7; margin-left: 4px; }
 
-.stage { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+.stage { display: flex; justify-content: center; }
 .phone { width: 390px; max-width: 100%; height: 800px; flex: none; background: var(--surface); border: 10px solid var(--frame); border-radius: 52px; overflow: hidden; position: relative; box-shadow: 0 24px 60px -28px rgba(23, 32, 43, .45); display: flex; flex-direction: column; }
 .status { height: 42px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 26px 0; font-weight: 700; font-size: 14px; }
 .status .isl { width: 96px; height: 26px; background: var(--frame); border-radius: 999px; }
@@ -62,19 +60,6 @@ button:disabled { cursor: default; }
 .homebar i { width: 130px; height: 5px; border-radius: 3px; background: var(--ink); opacity: .85; }
 .marks { position: absolute; inset: 0; pointer-events: none; }
 
-.info { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
-.info section { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
-.info h2 { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin: 0 0 6px; }
-.info h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
-.info p { margin: 0; }
-.goms { font-family: var(--font-num); font-size: 15px; background: var(--surface-2); border-radius: 10px; padding: 10px 12px; overflow-x: auto; white-space: nowrap; }
-.goms-total { margin-top: 8px; font-weight: 700; }
-.legend { color: var(--muted); font-size: 13px; margin-top: 6px; }
-.row-btns { display: flex; flex-wrap: wrap; gap: 8px; }
-.ghost { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 7px 12px; font-weight: 600; font-size: 14px; }
-.ghost[aria-pressed="true"] { border-color: var(--mark); color: var(--mark); }
-.steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
-.steps li.cur { font-weight: 700; color: var(--accent); }
 
 /* ---------- shared app chrome ---------- */
 .bar { display: flex; align-items: center; gap: 8px; padding: 6px 14px 4px; min-height: 48px; }
@@ -187,9 +172,8 @@ button:disabled { cursor: default; }
 .mbox.small .mtag { top: auto; bottom: -24px; left: 50%; transform: translateX(-50%); }
 
 /* ---------- screenshot mode ---------- */
-body.shot .top, body.shot .info { display: none; }
+body.shot .top { display: none; }
 body.shot .page { padding: 20px; max-width: none; }
-body.shot .stage { justify-content: center; }
 body.shot .phone { box-shadow: none; }
 
 @media (max-width: 430px) { .phone { border-width: 6px; border-radius: 40px; height: 760px; } .disp .big { font-size: 64px; } .ringwrap { width: 236px; height: 236px; } }
@@ -198,9 +182,7 @@ body.shot .phone { box-shadow: none; }
 
 <div class="page">
   <header class="top">
-    <h1>Налаштування будильника на телефоні</h1>
-    <p>Три прототипи мобільного інтерфейсу для однієї задачі: поставити будильник на 07:30 по буднях (Пн–Пт).</p>
-    <nav class="tabs" role="tablist" id="tabs">
+    <nav class="tabs" id="tabs">
       <button class="tab" role="tab" data-v="1">1 · Цифрова клавіатура <small>тапи</small></button>
       <button class="tab" role="tab" data-v="2">2 · Кільце сну <small>перетягування</small></button>
       <button class="tab" role="tab" data-v="3">3 · Покроковий майстер <small>великі кнопки</small></button>
@@ -213,7 +195,6 @@ body.shot .phone { box-shadow: none; }
       <div class="homebar"><i></i></div>
       <div class="marks" id="marks"></div>
     </div>
-    <aside class="info" id="info"></aside>
   </main>
 </div>
 
@@ -270,7 +251,6 @@ body.shot .phone { box-shadow: none; }
   let V = 1, MARK = null, SHOT = false;
   const $screen = document.getElementById('screen');
   const $marks = document.getElementById('marks');
-  const $info = document.getElementById('info');
 
   function listScreen(st, msg) {
     return '<div class="body"><div class="big-title">Будильник</div><div class="alarms">' + st.alarms.map(a =>
@@ -427,45 +407,6 @@ body.shot .phone { box-shadow: none; }
     draw();
   });
 
-  // ---------------- notes panel ----------------
-  const INFO = {
-    1: { name: 'Цифрова клавіатура', desc: 'Час набирається на великій цифровій клавіатурі внизу екрана: 7 → 3 → 0 дає 07:30. Неможливі цифри вимикаються, повтор вибирається одним із чотирьох пресетів.',
-      ctx: 'Коли користувач точно знає потрібний час, зокрема «некруглий» (06:50, 07:35): кількість дотиків не залежить від значення. Зручно однією рукою, великим пальцем.',
-      goms: 'M T T T M T M T', total: '3·1,35 + 5·0,10 = 4,55 с',
-      steps: ['Екран нового будильника', 'Натиснуто «7» → 07:__', 'Натиснуто «3», «0» → 07:30', 'Обрано «Будні»', '«Зберегти» — будильник у списку'] },
-    2: { name: 'Кільце сну', desc: 'Добове кільце: місяць — зараз (22:40), сонце — час підйому. Користувач тягне сонце пальцем по кільцю й одразу бачить, скільки спатиме.',
-      ctx: 'Для тих, хто вирішує «скільки я посплю», а не «яка цифра»: студентів, людей зі змінним графіком. Найшвидший, якщо потрібний час близький до запропонованого.',
-      goms: 'M D M T M T', total: '3·1,35 + 0,18 + 2·0,10 = 4,43 с',
-      steps: ['Екран нового будильника (08:00)', 'Сонце перетягнуто на 07:30', 'Обрано «Будні»', '«Зберегти» — будильник у списку'] },
-    3: { name: 'Покроковий майстер', desc: 'Одне питання на екран: година → хвилини → повтор → підтвердження. Великі кнопки, на кожному кроці 4–6 варіантів у групі.',
-      ctx: 'Для літніх людей і новачків, людей зі слабким зором чи тремором рук: нічого не треба пам’ятати чи точно тягнути, помилитися важко.',
-      goms: 'M T M T M T M T', total: '4·(1,35 + 0,10) = 5,80 с',
-      steps: ['Вибір години (07)', 'Вибір хвилин (:30)', 'Вибір повтору (По буднях)', 'Підтвердження', 'Будильник у списку'] }
-  };
-  function curStep() {
-    if (V === 1) { const s = S[1]; return s.screen === 'list' ? 4 : s.days.length ? 3 : s.digits.length >= 3 ? 2 : s.digits.length ? 1 : 0; }
-    if (V === 2) { const s = S[2]; return s.screen === 'list' ? 3 : s.days.length ? 2 : s.min !== 480 ? 1 : 0; }
-    return S[3].step - 1;
-  }
-  function renderInfo() {
-    const d = INFO[V], cs = curStep();
-    $info.innerHTML =
-      '<section><h3>Варіант ' + V + '</h3><h2>' + d.name + '</h2><p>' + d.desc + '</p></section>' +
-      '<section><h3>Коли цей варіант кращий</h3><p>' + d.ctx + '</p></section>' +
-      '<section><h3>Кроки користувача</h3><ol class="steps">' + d.steps.map((s, i) => '<li class="' + (i === cs ? 'cur' : '') + '">' + s + '</li>').join('') + '</ol></section>' +
-      '<section><h3>TLM (Touch-Level Model)</h3><div class="goms">' + d.goms + '</div><div class="goms-total">T = ' + d.total + '</div>' +
-      '<div class="legend">M = 1,35 с · T (тап) = 0,10 с · D (перетягування) ≈ 0,18 с</div></section>' +
-      '<section><h3>Закони на екрані</h3><div class="row-btns">' +
-      '<button class="ghost" data-mark="fitts" aria-pressed="' + (MARK === 'fitts') + '">Показати закон Фітса</button>' +
-      '<button class="ghost" data-mark="hick" aria-pressed="' + (MARK === 'hick') + '">Показати закон Хіка</button>' +
-      '<button class="ghost" data-reset>Почати спочатку</button></div></section>';
-  }
-  $info.addEventListener('click', e => {
-    const m = e.target.closest('[data-mark]');
-    if (m) { MARK = MARK === m.dataset.mark ? null : m.dataset.mark; draw(); return; }
-    if (e.target.closest('[data-reset]')) { reset(V); MARK = null; draw(); }
-  });
-
   function drawMarks() {
     $marks.innerHTML = '';
     if (!MARK) return;
@@ -486,7 +427,6 @@ body.shot .phone { box-shadow: none; }
   function draw() {
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(+t.dataset.v === V)));
     RENDER[V]();
-    renderInfo();
     requestAnimationFrame(drawMarks);
   }
   document.getElementById('tabs').addEventListener('click', e => {
